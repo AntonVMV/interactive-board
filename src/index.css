@@ -9,3 +9,8 @@ body,
   width: 100vw;
   height: 100vh;
 }
+
+body {
+  background-color: #7a7a7a;
+  color: white;
+}
