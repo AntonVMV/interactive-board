@@ -26,12 +26,9 @@ export const useEventListener = ({
     savedHandler.current?.(event);
   }, []);
 
-  useEffect(
-    () => {
-      const target = getRefElement(element);
-      target?.addEventListener(eventName, handleEventListener);
-      return () => target?.removeEventListener(eventName, handleEventListener);
-    },
-    [eventName, element, handleEventListener] // Re-run if eventName or element changes
-  );
+  useEffect(() => {
+    const target = getRefElement(element);
+    target?.addEventListener(eventName, handleEventListener);
+    return () => target?.removeEventListener(eventName, handleEventListener);
+  }, [eventName, element, handleEventListener]);
 };
