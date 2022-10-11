@@ -17,17 +17,27 @@ export const Zoom: React.FC<ICanvasProps> = ({ canvas, ctx }) => {
   const zoomHandler = (event: Event) => {
     if (!ctx || !(event instanceof WheelEvent)) return;
 
+    // event.wheel.deltaY on different screens may have different values ( 100, 125... etc)
+    // To prevent errors in the calculations, we make the zoom value constant and equal to 125
+    let zoomConstant;
+
+    if (event.deltaY < 0) {
+      zoomConstant = -125;
+    } else {
+      zoomConstant = 125;
+    }
+
     if (
-      canvasScale - event.deltaY / 1000 < 1 ||
-      canvasScale - event.deltaY / 1000 > 10
+      canvasScale - zoomConstant / 1000 < 1 ||
+      canvasScale - zoomConstant / 1000 > 10
     ) {
       return;
     }
 
-    const offsetDeltaX = (ctx.canvas.width * event.deltaY) / wheelSens / 2;
-    const offsetDeltaY = (ctx.canvas.height * event.deltaY) / wheelSens / 2;
+    const offsetDeltaX = (ctx.canvas.width * zoomConstant) / wheelSens / 2;
+    const offsetDeltaY = (ctx.canvas.height * zoomConstant) / wheelSens / 2;
 
-    const scaleRate = canvasScale - event.deltaY / 1000;
+    const scaleRate = canvasScale - zoomConstant / 1000;
 
     const calcOffsetX = canvasOutOfBounds(
       canvasOffset.x,

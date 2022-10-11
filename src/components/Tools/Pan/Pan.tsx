@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../../../hooks/storeHooks";
 import { useEventListener } from "../../../hooks/useEventListener";
 import { Coords } from "../../../types";
@@ -9,10 +9,6 @@ import styles from "./Pan.module.css";
 
 export const Pan: React.FC<ICanvasProps> = ({ canvas, ctx }) => {
   const [isPressed, setIsPressed] = useState<boolean>(false);
-  const [mouseLastPosition, setMouseLastPosition] = useState<Coords>({
-    x: 0,
-    y: 0,
-  });
   const { canvasScale, canvasOffset } = useAppSelector(
     (state) => state.canvasSlice
   );
@@ -22,7 +18,6 @@ export const Pan: React.FC<ICanvasProps> = ({ canvas, ctx }) => {
   const startMoving = (event: Event) => {
     if (!ctx || !(event instanceof MouseEvent)) return;
     setIsPressed(true);
-    setMouseLastPosition({ x: event.pageX, y: event.pageY });
   };
 
   const stopMoving = () => {
@@ -32,26 +27,17 @@ export const Pan: React.FC<ICanvasProps> = ({ canvas, ctx }) => {
   const moveHandler = (event: Event) => {
     event.preventDefault();
 
-    if (!ctx || !isPressed || !(event instanceof MouseEvent)) return;
-
-    const lastMousePos = mouseLastPosition;
-    const currentMousePos = { x: event.pageX, y: event.pageY };
-    setMouseLastPosition(currentMousePos);
-
-    const diff = {
-      x: currentMousePos.x - lastMousePos.x,
-      y: currentMousePos.y - lastMousePos.y,
-    };
+    if (!ctx || !(event instanceof MouseEvent)) return;
 
     const calcOffsetX = canvasOutOfBounds(
       canvasOffset.x,
-      diff.x,
+      event.movementX,
       canvasScale,
       ctx.canvas.width
     );
     const calcOffsetY = canvasOutOfBounds(
       canvasOffset.y,
-      diff.y,
+      event.movementY,
       canvasScale,
       ctx.canvas.height
     );
@@ -61,7 +47,10 @@ export const Pan: React.FC<ICanvasProps> = ({ canvas, ctx }) => {
 
   useEventListener({
     eventName: "mousemove",
-    handler: moveHandler,
+    handler: (e) => {
+      if (!isPressed) return;
+      moveHandler(e);
+    },
   });
 
   useEventListener({

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useAppSelector } from "../../hooks/storeHooks";
 import { Pan } from "../Tools/Pan/Pan";
+import { Scrollbar } from "../Scrollbar/Scrollbar";
 import { Zoom } from "../Tools/Zoom/Zoom";
 import styles from "./Canvas.module.css";
 
@@ -19,12 +20,12 @@ export const Canvas: React.FC = () => {
     (state) => state.canvasSlice
   );
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
-  const [lastOffset, setLastOffset] = useState<Coords>(initCoords);
+  const lastOffsetRef = useRef<Coords>(initCoords);
 
   const canvas = useRef<HTMLCanvasElement>(null);
 
-  useLayoutEffect(() => {
-    setLastOffset(canvasOffset);
+  useEffect(() => {
+    lastOffsetRef.current = canvasOffset;
   }, [canvasOffset]);
 
   //Get canvas context
@@ -37,7 +38,7 @@ export const Canvas: React.FC = () => {
   }, []);
 
   //Transform, when offset or zoom changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ctx) {
       return;
     }
@@ -48,10 +49,10 @@ export const Canvas: React.FC = () => {
       b,
       c,
       canvasScale,
-      e + canvasOffset.x - lastOffset.x,
-      f + canvasOffset.y - lastOffset.y
+      e + canvasOffset.x - lastOffsetRef.current.x,
+      f + canvasOffset.y - lastOffsetRef.current.y
     );
-  }, [canvasOffset, ctx, canvasScale, lastOffset]);
+  }, [canvasOffset, ctx, canvasScale]);
 
   //Draw elements
   useEffect(() => {
@@ -73,9 +74,18 @@ export const Canvas: React.FC = () => {
     <>
       <div className={styles.container}>
         <canvas ref={canvas}></canvas>
+        {ctx && (
+          <Scrollbar
+            canvHeight={ctx.canvas.height}
+            canvWidth={ctx.canvas.width}
+            offsetWidth={ctx.canvas.offsetWidth}
+            offsetHeight={ctx.canvas.offsetHeight}
+            style={{ opacity: canvasScale > 1 ? 1 : 0 }}
+          />
+        )}
       </div>
-      <Zoom canvas={canvas} ctx={ctx} />
       <Pan canvas={canvas} ctx={ctx} />
+      <Zoom canvas={canvas} ctx={ctx} />
     </>
   );
 };
